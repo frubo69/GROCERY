@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<script src="https://www.gstatic.com/firebasejs/10.1.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.1.0/firebase-database.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.1.0/firebase-firestore.js"></script>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home - My Grocery Website</title>
+    <style>
+        body {
+        font-family: 'Helvetica Neue', Arial, sans-serif;
+        text-align: center;
+        margin: 0;
+        background-image: url('images/your-background-image.jpg'); /* Путь к вашему изображению */
+        background-size: cover; /* Масштабирует изображение, чтобы заполнить весь экран */
+        background-attachment: fixed; /* Фон остается фиксированным при прокрутке */
+        background-position: center; /* Центрирует изображение */
+        color: #333;
+    }
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+        .header {
+            position: relative;
+            width: 100%;
+            height: 200px;
+            background-image: url('images/top_background.webp');
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            padding-top: 20px;
+        }
+        .cart-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            background-color: #ffffff;
+            border: 2px solid #4a7c59;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .cart-button img {
+            width: 160%;
+            height: 160%;
+            object-fit: contain;
+        }
+
+        .cart-button:hover {
+            background-color: #4a7c59;
+            transform: scale(1.1);
+        }
+
+        .cart-count {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background-color: #ff6b6b;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        .catalog {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .category-title {
+            width: 100%;
+            text-align: center;
+            font-size: 1.8em;
+            color: #4a7c59;
+            margin-top: 30px;
+            margin-bottom: 10px;
+        }
+        .catalog {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin: 20px;
+        }
+        .category-section {
+            width: 80%;
+            margin: 20px;
+            padding: 20px;
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .category-title {
+            font-size: 2em;
+            color: #4a7c59;
+            margin-bottom: 20px;
+        }
+        .product-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            width: 100%;
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 10px;
+        }
+        .product {
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 15px;
+            width: 200px;
+            text-align: center;
+            background-color: #ffffff;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease;
+        }
+        .product:hover {
+            transform: scale(1.03);
+        }
+        .product img {
+            width: 100%;
+            height: auto;
+            max-width: 100%;
+            max-height: 150px;
+            object-fit: contain;
+            border-radius: 5px;
+        }
+        .product h2 {
+            font-size: 1.2em;
+            margin: 10px 0;
+            cursor: pointer;
+            color: #4a7c59;
+        }
+        .product p {
+            font-size: 1em;
+            color: #666;
+        }
+        .product .price {
+            font-size: 1.1em;
+            color: #4a7c59;
+            font-weight: bold;
+        }
+        .add-to-cart {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 12px 25px;
+            background-color: transparent;
+            color: #4a7c59;
+            border: 2px solid #4a7c59;
+            border-radius: 30px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .add-to-cart:hover {
+            background-color: #4a7c59;
+            color: #ffffff;
+        }
+        .quantity {
+            width: 50px;
+            padding: 5px;
+            margin-top: 10px;
+        }
+        /* Search Bar Styles */
+        .search-container {
+    position: sticky;
+    top: 0;
+    background-color: #a3c9a8;
+    padding: 10px 20px;
+    z-index: 100;
+    display: flex; /* Используем flex для горизонтального расположения */
+    align-items: center; /* Выравниваем элементы по вертикали */
+    justify-content: space-between; /* Пространство между группами элементов */
+}
+
+.search-group {
+    display: flex; /* Для группировки поисковой строки и кнопки */
+    align-items: center; /* Выравнивание элементов по вертикали */
+    margin: 0 auto; /* Центрирование группы поиска */
+}
+
+.search-container input[type="text"] {
+    width: 250px;
+    padding: 8px;
+    font-size: 1em;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+}
+
+.search-container button {
+        padding: 12px 25px;
+        background-color: transparent;
+        color: #4a7c59;
+        border: 2px solid #4a7c59;
+        border-radius: 30px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .search-container button:hover {
+        background-color: #4a7c59;
+        color: #ffffff;
+    }
+
+.register-button {
+        padding: 12px 25px;
+        background-color: transparent;
+        color: #4a7c59;
+        border: 2px solid #4a7c59;
+        border-radius: 30px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .register-button:hover {
+        background-color: #4a7c59;
+        color: #ffffff;
+    }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 400px;
+            text-align: left;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .close-button {
+            float: right;
+            font-size: 1.5em;
+            cursor: pointer;
+        }
+        .modal-content h2 {
+            margin-top: 0;
+        }
+        /* Notification Styles */
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            font-size: 0.9em;
+            display: none;
+            z-index: 1000;
+        }
+        @keyframes fadeOut {
+        0% {
+            opacity: 1;
+            transform: scale(1);
+        }
+        100% {
+            opacity: 0;
+            transform: scale(0.9);
+        }
+    }
+
+    .fade-out {
+        animation: fadeOut 0.5s ease forwards;
+    }
+    </style>
+</head>
+<body onclick="clearSearch(event)">
+    <div class="header">
+        <a href="brand-history.html">
+    <img src="images/logo.jpg" alt="Grocery Website Logo" style="width: 300px; margin-bottom: 20px;">
+</a>
+
+    </div>
+
+    <div class="search-container">
+        <div class="search-group">
+            <input type="text" id="searchInput" placeholder="Search for products..." oninput="searchProduct()">
+            <button onclick="searchProduct()">Search</button>
+        </div>
+        <button onclick="window.location.href='register.html'" class="register-button">Register</button>
+    </div>
+    
+
+    <div id="catalog" class="catalog">
+        <!-- Dairy Products -->
+        <div class="category-title">Dairy Products</div>
+        <div class="product" data-name="Almond Milk">
+            <img src="images/almond_milk.png" alt="Almond Milk">
+            <h2 onclick="showProductDetails('Almond Milk')">Almond Milk</h2>
+            <p>Dairy-free almond milk, 1-liter pack.</p>
+            <p class="price">AED 15 / pack</p>
+            <input type="number" class="quantity" id="quantity1" value="1" min="1">
+            <button class="add-to-cart" onclick="addToCart('Almond Milk', 'AED 15 / pack', 'quantity1')">Add to Cart</button>
+        </div>
+        <div class="product" data-name="Cow Milk">
+            <img src="images/cow_milk.jpg" alt="Cow Milk">
+            <h2 onclick="showProductDetails('Cow Milk')">Cow Milk</h2>
+            <p>Fresh cow milk, 1-liter bottle.</p>
+            <p class="price">AED 10 / bottle</p>
+            <input type="number" class="quantity" id="quantity2" value="1" min="1">
+            <button class="add-to-cart" onclick="addToCart('Cow Milk', 'AED 10 / bottle', 'quantity2')">Add to Cart</button>
+        </div>
+        <div class="product" data-name="Greek Yogurt">
+            <img src="images/greek_yougurt.png" alt="Greek Yogurt">
+            <h2 onclick="showProductDetails('Greek Yogurt')">Greek Yogurt</h2>
+            <p>Rich and creamy Greek yogurt, 500g.</p>
+            <p class="price">AED 18 / tub</p>
+            <input type="number" class="quantity" id="quantity3" value="1" min="1">
+            <button class="add-to-cart" onclick="addToCart('Greek Yogurt', 'AED 18 / tub', 'quantity3')">Add to Cart</button>
+        </div>
+        <!-- Fruits -->
+        <div class="category-title">Fruits</div>
+        <div class="product" data-name="Organic Apples">
+            <img src="images/apple.jfif" alt="Organic Apples">
+            <h2 onclick="showProductDetails('Organic Apples')">Organic Apples</h2>
+            <p>Fresh organic apples from local farms.</p>
+            <p class="price">AED 12 / kg</p>
+            <input type="number" class="quantity" id="quantity4" value="1" min="1">
+            <button class="add-to-cart" onclick="addToCart('Organic Apples', 'AED 12 / kg', 'quantity4')">Add to Cart</button>
+        </div>
+        <div class="product" data-name="Bananas">
+            <img src="images/bananas.jpg" alt="Bananas">
+            <h2 onclick="showProductDetails('Bananas')">Bananas</h2>
+            <p>Fresh bananas, full of potassium.</p>
+            <p class="price">AED 6 / bunch</p>
+            <input type="number" class="quantity" id="quantity5" value="1" min="1">
+            <button class="add-to-cart" onclick="addToCart('Bananas', 'AED 6 / bunch', 'quantity5')">Add to Cart</button>
+        </div>
+        <div class="product" data-name="Blueberries">
+            <img src="images/blueberries.jpg" alt="Blueberries">
+            <h2 onclick="showProductDetails('Blueberries')">Blueberries</h2>
+            <p>Fresh and antioxidant-rich blueberries, 200g.</p>
+            <p class="price">AED 20 / pack</p>
+            <input type="number" class="quantity" id="quantity6" value="1" min="1">
+            <button class="add-to-cart" onclick="addToCart('Blueberries', 'AED 20 / pack', 'quantity6')">Add to Cart</button>
+        </div>
+        <!-- Vegetables -->
+        <div class="category-title">Vegetables</div>
+        <div class="product" data-name="Fresh Spinach">
+            <img src="images/spinach.jpg.jpg" alt="Fresh Spinach">
+            <h2 onclick="showProductDetails('Fresh Spinach')">Fresh Spinach</h2>
+            <p>Organic spinach leaves, rich in nutrients.</p>
+            <p class="price">AED 8 / bunch</p>
+            <input type="number" class="quantity" id="quantity7" value="1" min="1">
+            <button class="add-to-cart" onclick="addToCart('Fresh Spinach', 'AED 8 / bunch', 'quantity7')">Add to Cart</button>
+        </div>
+        <div class="product" data-name="Carrots">
+            <img src="images/carrots.jpg" alt="Carrots">
+            <h2 onclick="showProductDetails('Carrots')">Carrots</h2>
+            <p>Fresh carrots, rich in beta carotene, 1kg.</p>
+            <p class="price">AED 5 / kg</p>
+            <input type="number" class="quantity" id="quantity8" value="1" min="1">
+            <button class="add-to-cart" onclick="addToCart('Carrots', 'AED 5 / kg', 'quantity8')">Add to Cart</button>
+        </div>
+        <div class="product" data-name="Bell Peppers">
+            <img src="images/bell peppers.jpg" alt="Bell Peppers">
+            <h2 onclick="showProductDetails('Bell Peppers')">Bell Peppers</h2>
+            <p>Mixed bell peppers, rich in vitamins, 500g.</p>
+            <p class="price">AED 15 / pack</p>
+            <input type="number" class="quantity" id="quantity9" value="1" min="1">
+            <button class="add-to-cart" onclick="addToCart('Bell Peppers', 'AED 15 / pack', 'quantity9')">Add to Cart</button>
+        </div>
+        <!-- Snacks -->
+        <div class="category-title">Snacks</div>
+        <div class="product" data-name="Mixed Nuts">
+            <img src="images/mixed nuts.jpg" alt="Mixed Nuts">
+            <h2 onclick="showProductDetails('Mixed Nuts')">Mixed Nuts</h2>
+            <p>Healthy mixed nuts, 250g.</p>
+            <p class="price">AED 25 / pack</p>
+            <input type="number" class="quantity" id="quantity10" value="1" min="1">
+            <button class="add-to-cart" onclick="addToCart('Mixed Nuts', 'AED 25 / pack', 'quantity10')">Add to Cart</button>
+        </div>
+        <div class="product" data-name="Granola Bars">
+            <img src="images/Granola Bars.jpg" alt="Granola Bars">
+            <h2 onclick="showProductDetails('Granola Bars')">Granola Bars</h2>
+            <p>Energy-packed granola bars, 6 pieces.</p>
+            <p class="price">AED 18 / box</p>
+            <input type="number" class="quantity" id="quantity11" value="1" min="1">
+            <button class="add-to-cart" onclick="addToCart('Granola Bars', 'AED 18 / box', 'quantity11')">Add to Cart</button>
+        </div>
+        <div class="product" data-name="Dark Chocolate">
+            <img src="images/Dark Chocolate.jpg" alt="Dark Chocolate">
+            <h2 onclick="showProductDetails('Dark Chocolate')">Dark Chocolate</h2>
+            <p>Rich dark chocolate, 100g bar.</p>
+            <p class="price">AED 10 / bar</p>
+            <input type="number" class="quantity" id="quantity12" value="1" min="1">
+            <button class="add-to-cart" onclick="addToCart('Dark Chocolate', 'AED 10 / bar', 'quantity12')">Add to Cart</button>
+        </div>
+        <!-- Add more products here, divided into categories -->
+    </div>
+
+    <!-- Modal for Product Details -->
+    <div id="productModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeModal()">&times;</span>
+            <h2 id="modalTitle"></h2>
+            <p id="modalDescription"></p>
+            <p><strong>Price:</strong> <span id="modalPrice"></span></p>
+            <p><strong>Nutritional Info:</strong></p>
+            <ul id="modalNutrition"></ul>
+        </div>
+    </div>
+
+    <!-- Notification -->
+    <div id="notification" class="notification"></div>
+
+    <button class="cart-button" onclick="viewCart()">
+        <img src="images/cart-button.png" alt="Cart Icon">
+        <span id="cart-count" class="cart-count">0</span>
+    </button>
+
+    <script>
+        
+
+        const correctionMap = {
+            "сфккще": "carrots", // Пример исправления для неверной раскладки
+            "ghbdtn": "hello",   // Пример исправления для английской раскладки
+            "апельсин": "orange" // Добавьте другие необходимые варианты
+        };
+
+        function correctSearchTerm(term) {
+            return correctionMap[term] || term;
+        }
+
+        const russianToEnglishMap = {
+        "а": "f", "б": ",", "в": "d", "г": "u", "д": "l", "е": "t", "ё": "`", "ж": ";", "з": "p",
+        "и": "b", "й": "q", "к": "r", "л": "k", "м": "v", "н": "y", "о": "j", "п": "g", "р": "h",
+        "с": "c", "т": "n", "у": "e", "ф": "a", "х": "[", "ц": "w", "ч": "x", "ш": "i", "щ": "o",
+        "ъ": "]", "ы": "s", "ь": "m", "э": "'", "ю": ".", "я": "z"
+    };
+
+    // Функция для замены русских букв на английские
+    function convertRussianToEnglish(term) {
+        let result = '';
+        for (let char of term) {
+            if (russianToEnglishMap[char]) {
+                result += russianToEnglishMap[char];
+            } else {
+                result += char;
+            }
+        }
+        return result;
+    }
+
+    // Изменяем функцию поиска, чтобы использовать замену русских букв на английские
+    function searchProduct() {
+        let searchTerm = document.getElementById('searchInput').value.toLowerCase();
+        
+        // Преобразуем русские буквы в аналогичные английские
+        searchTerm = convertRussianToEnglish(searchTerm);
+
+        const categories = document.querySelectorAll('.category-title');
+        const products = document.querySelectorAll('.product');
+
+        let foundCategories = new Set(); // Для отслеживания релевантных категорий
+        
+        // Скрываем все товары изначально
+        products.forEach(product => {
+            const productName = product.getAttribute('data-name').toLowerCase();
+            if (productName.includes(searchTerm)) {
+                product.style.display = 'block';
+                // Добавляем соответствующую категорию в найденные категории
+                let categoryElement = product.previousElementSibling;
+                while (categoryElement && !categoryElement.classList.contains('category-title')) {
+                    categoryElement = categoryElement.previousElementSibling;
+                }
+                if (categoryElement) {
+                    foundCategories.add(categoryElement);
+                }
+            } else {
+                product.style.display = 'none';
+            }
+        });
+
+        // Показываем только релевантные категории
+        categories.forEach(category => {
+            if (foundCategories.has(category)) {
+                category.style.display = 'block';
+            } else {
+                category.style.display = 'none';
+            }
+        });
+    }
+
+        function clearSearch(event) {
+            if (event.target.id !== 'searchInput' && !event.target.classList.contains('product') && !event.target.closest('.product')) {
+                document.getElementById('searchInput').value = '';
+                searchProduct();
+            }
+        }
+
+        function showProductDetails(productName) {
+            const product = productDetails[productName];
+            document.getElementById("modalTitle").textContent = productName;
+            document.getElementById("modalDescription").textContent = product.description;
+            document.getElementById("modalPrice").textContent = product.price;
+
+            const nutritionList = document.getElementById("modalNutrition");
+            nutritionList.innerHTML = "";
+            product.nutrition.forEach(info => {
+                const li = document.createElement("li");
+                li.textContent = info;
+                nutritionList.appendChild(li);
+            });
+
+            document.getElementById("productModal").style.display = "flex";
+        }
+
+        function closeModal() {
+            document.getElementById("productModal").style.display = "none";
+        }
+
+        function addToCart(productName, price, quantityId) {
+            const quantity = document.getElementById(quantityId).value;
+            const product = { name: productName, price, quantity };
+
+            let cart = JSON.parse(localStorage.getItem('cart')) || [];
+            const existingProduct = cart.find(item => item.name === productName);
+
+            if (existingProduct) {
+                existingProduct.quantity = parseInt(existingProduct.quantity) + parseInt(quantity);
+            } else {
+                cart.push(product);
+            }
+
+            localStorage.setItem('cart', JSON.stringify(cart));
+            updateCartCount();
+            showNotification(productName, quantity);
+        }
+
+        function viewCart() {
+        // Добавляем анимацию перед переходом на страницу
+        const cartButton = document.querySelector('.cart-button');
+        cartButton.classList.add('fade-out');
+
+        // Переход к корзине после завершения анимации
+        setTimeout(() => {
+            window.location.href = "cart.html";
+        }, 500); // Таймаут должен совпадать с длительностью анимации (0.5s)
+    }
+
+        function updateCartCount() {
+            const cart = JSON.parse(localStorage.getItem('cart')) || [];
+            const uniqueCategories = new Set(cart.map(item => item.name));
+            document.getElementById('cart-count').textContent = uniqueCategories.size;
+        }
+
+        function showNotification(productName, quantity) {
+            const notification = document.getElementById('notification');
+            notification.textContent = `${productName} (${quantity}) added to your cart!`;
+            notification.style.display = 'block';
+
+            // Hide after 2 seconds
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 2000);
+        }
+
+        window.onload = updateCartCount;
+    </script>
+    <div style="position: fixed; bottom: 20px; left: 20px; z-index: 1000;">
+        <button onclick="toggleContactForm()" class="contact-button">Contact Us</button>
+    </div>
+    
+    <!-- Contact Us Form -->
+     <div id="contactForm" style="display: none; position: fixed; bottom: 80px; left: 20px; background: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); width: 300px;">
+        <form onsubmit="sendContactMessage(event)">
+            <h3 style="color: #4a7c59; text-align: center;">Contact Us</h3>
+            <label for="name">Name:</label><br>
+            <input type="text" id="name" name="name" style="width: 100%; margin-bottom: 10px; padding: 8px; border: 1px solid #ddd; border-radius: 5px;" required><br>
+            <label for="email">Email:</label><br>
+            <input type="email" id="email" name="email" style="width: 100%; margin-bottom: 10px; padding: 8px; border: 1px solid #ddd; border-radius: 5px;" required><br>
+            <label for="message">Message:</label><br>
+            <textarea id="message" name="message" rows="4" style="width: 100%; margin-bottom: 10px; padding: 8px; border: 1px solid #ddd; border-radius: 5px;" required></textarea><br>
+            <button type="submit" style="background: #4a7c59; color: white; padding: 10px; width: 100%; border: none; border-radius: 5px; font-size: 14px;">Send</button>
+        </form>
+    </div>
+    
+    <script src="https://www.gstatic.com/firebasejs/10.1.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.1.0/firebase-database.js"></script>
+<style>
+    /* Notification styles */
+    .notification {
+        position: fixed;
+        bottom: 20px;
+        left: 20px;
+        background-color: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 10px 15px;
+        border-radius: 5px;
+        font-size: 14px;
+        display: none;
+        opacity: 1;
+        transition: opacity 0.5s ease;
+        z-index: 1000;
+    }
+
+    /* Contact Form styles */
+    #contactForm {
+        position: fixed;
+        bottom: 80px;
+        left: 20px;
+        background: white;
+        padding: 15px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        width: 300px;
+        display: none;
+        z-index: 1001;
+    }
+
+    .close-button {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: none;
+        border: none;
+        font-size: 18px;
+        font-weight: bold;
+        cursor: pointer;
+        color: #4a7c59;
+    }
+
+    .close-button:hover {
+        color: #ff6b6b;
+    }
+</style>
+
+<script>
+    // Firebase configuration
+    const firebaseConfig = {
+        apiKey: "AIzaSyD93B90R8_fEpiMtIeCLWA607PKXrT3aXE",
+        authDomain: "grocery-cc66a.firebaseapp.com",
+        projectId: "grocery-cc66a",
+        storageBucket: "grocery-cc66a.firebasestorage.app",
+        messagingSenderId: "676154145906",
+        appId: "1:676154145906:web:a2154f92fc6b561a55d6eb",
+        measurementId: "G-5V17EW07Q2"
+    };
+
+    // Initialize Firebase
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+    const db = firebase.database();
+
+    // Toggle the Contact Us form
+    function toggleContactForm() {
+        const form = document.getElementById('contactForm');
+        form.style.display = form.style.display === 'block' ? 'none' : 'block';
+    }
+
+    // Close the Contact Us form
+    function closeContactForm() {
+        const form = document.getElementById('contactForm');
+        form.style.display = 'none';
+    }
+
+    // Send the contact message
+    function sendContactMessage(event) {
+        event.preventDefault();
+
+        // Get form inputs
+        const name = document.getElementById('name').value;
+        const email = document.getElementById('email').value;
+        const message = document.getElementById('message').value;
+
+        // Hide the form immediately
+        closeContactForm();
+
+        // Show notification
+        const notification = document.createElement('div');
+        notification.textContent = 'Message sent successfully!';
+        notification.classList.add('notification');
+        document.body.appendChild(notification);
+
+        notification.style.display = 'block';
+
+        // Hide the notification after 3 seconds
+        setTimeout(() => {
+            notification.style.opacity = '0';
+            setTimeout(() => notification.remove(), 500);
+        }, 3000);
+
+        // Send data to Firebase
+        db.ref('contact_messages').push({
+            name,
+            email,
+            message,
+            timestamp: new Date().toISOString()
+        }).catch((error) => {
+            console.error('Error sending message:', error);
+        });
+
+        // Clear form fields
+        document.getElementById('name').value = '';
+        document.getElementById('email').value = '';
+        document.getElementById('message').value = '';
+    }
+</script>
+
+<!-- Button to open the Contact Us form -->
+<div style="position: fixed; bottom: 20px; left: 20px; z-index: 1000;">
+    <button onclick="toggleContactForm()" class="contact-button" style="padding: 10px 20px; background: #4a7c59; color: white; border: none; border-radius: 5px; cursor: pointer;">Contact Us</button>
+</div>
+
+<!-- Contact Us Form -->
+<div id="contactForm">
+    <button class="close-button" onclick="closeContactForm()">&times;</button>
+    <form onsubmit="sendContactMessage(event)">
+        <h3 style="color: #4a7c59; text-align: center;">Contact Us</h3>
+        <label for="name">Name:</label><br>
+        <input type="text" id="name" name="name" style="width: 100%; margin-bottom: 10px; padding: 8px; border: 1px solid #ddd; border-radius: 5px;" required><br>
+        <label for="email">Email:</label><br>
+        <input type="email" id="email" name="email" style="width: 100%; margin-bottom: 10px; padding: 8px; border: 1px solid #ddd; border-radius: 5px;" required><br>
+        <label for="message">Message:</label><br>
+        <textarea id="message" name="message" rows="4" style="width: 100%; margin-bottom: 10px; padding: 8px; border: 1px solid #ddd; border-radius: 5px;" required></textarea><br>
+        <button type="submit" style="background: #4a7c59; color: white; padding: 10px; width: 100%; border: none; border-radius: 5px; font-size: 14px;">Send</button>
+    </form>
+</div>
+
+    
+    <div id="contactForm" style="position: fixed; bottom: 80px; left: 20px; background: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); width: 300px;">
+        <form onsubmit="sendContactMessage(event)">
+            <h3 style="color: #4a7c59; text-align: center;">Contact Us</h3>
+            <label for="name">Name:</label><br>
+            <input type="text" id="name" name="name" style="width: 100%; margin-bottom: 10px; padding: 8px; border: 1px solid #ddd; border-radius: 5px;" required><br>
+            <label for="email">Email:</label><br>
+            <input type="email" id="email" name="email" style="width: 100%; margin-bottom: 10px; padding: 8px; border: 1px solid #ddd; border-radius: 5px;" required><br>
+            <label for="message">Message:</label><br>
+            <textarea id="message" name="message" rows="4" style="width: 100%; margin-bottom: 10px; padding: 8px; border: 1px solid #ddd; border-radius: 5px;" required></textarea><br>
+            <button type="submit" style="background: #4a7c59; color: white; padding: 10px; width: 100%; border: none; border-radius: 5px; font-size: 14px;">Send</button>
+        </form>
+    </div>
+    
+    
+    <style>
+        /* Notification styles */
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            font-size: 14px;
+            display: none;
+            opacity: 1;
+            transition: opacity 0.5s ease;
+            z-index: 1000;
+        }
+    </style>    
+</body>
+</html>
