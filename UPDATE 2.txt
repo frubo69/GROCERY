@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home - My Grocery Website</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 0;
+        }
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+        .header {
+            position: relative;
+            width: 100%;
+            height: 290px;
+            background-image: url('images/background grocery.webp');
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            padding-top: 50px;
+        }
+        .cart-button {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            width: 50px;
+            height: 50px;
+            border: none;
+            cursor: pointer;
+            background-color: transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            border-radius: 10px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .cart-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .cart-button img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            border-radius: 10px;
+        }
+        .cart-count {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background-color: red;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        .catalog {
+            display: flex;
+            justify-content: center;
+            margin-top: 30px;
+        }
+        .product {
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 10px;
+            width: 250px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease;
+        }
+        .product:hover {
+            transform: scale(1.05);
+        }
+        .product img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 5px;
+        }
+        .product h2 {
+            font-size: 1.5em;
+            margin: 10px 0;
+            cursor: pointer;
+            color: #4e44a7;
+        }
+        .product p {
+            font-size: 1.1em;
+            color: #555;
+        }
+        .product .price {
+            font-size: 1.2em;
+            color: #4e44a7;
+            font-weight: bold;
+        }
+        .add-to-cart {
+            padding: 10px 15px;
+            background-color: #4e44a7;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            margin-top: 10px;
+        }
+        .add-to-cart:hover {
+            background-color: #3d3581;
+        }
+        .quantity {
+            width: 50px;
+            padding: 5px;
+            margin-top: 10px;
+        }
+        /* Search Bar Styles */
+        .search-container {
+            margin-top: 20px;
+            text-align: center;
+        }
+        .search-container input[type="text"] {
+            width: 300px;
+            padding: 10px;
+            font-size: 1em;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        .search-container button {
+            padding: 10px 15px;
+            font-size: 1em;
+            border-radius: 5px;
+            border: none;
+            background-color: #4e44a7;
+            color: white;
+            cursor: pointer;
+        }
+        .search-container button:hover {
+            background-color: #3d3581;
+        }
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 400px;
+            text-align: left;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .close-button {
+            float: right;
+            font-size: 1.5em;
+            cursor: pointer;
+        }
+        .modal-content h2 {
+            margin-top: 0;
+        }
+        /* Notification Styles */
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            font-size: 0.9em;
+            display: none;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <button class="cart-button" onclick="viewCart()">
+            <img src="images/CART.jpg" alt="Cart Icon">
+            <span id="cart-count" class="cart-count">0</span>
+        </button>
+
+        <img src="images/logo.jpg" alt="Grocery Website Logo" style="width: 500px; margin-bottom: 40px;">
+    </div>
+
+    <div class="search-container">
+        <input type="text" id="searchInput" placeholder="Search for products...">
+        <button onclick="searchProduct()">Search</button>
+    </div>
+
+    <div id="catalog" class="catalog">
+        <div class="product" data-name="Almond Milk">
+            <img src="images/almond_milk.png" alt="Almond Milk">
+            <h2 onclick="showProductDetails('Almond Milk')">Almond Milk</h2>
+            <p>Dairy-free almond milk, 1-liter pack.</p>
+            <p class="price">AED 15 / pack</p>
+            <input type="number" class="quantity" id="quantity1" value="1" min="1">
+            <button class="add-to-cart" onclick="addToCart('Almond Milk', 'AED 15 / pack', 'quantity1')">Add to Cart</button>
+        </div>
+        <div class="product" data-name="Organic Apples">
+            <img src="images/apple.jfif" alt="Organic Apples">
+            <h2 onclick="showProductDetails('Organic Apples')">Organic Apples</h2>
+            <p>Fresh organic apples from local farms.</p>
+            <p class="price">AED 12 / kg</p>
+            <input type="number" class="quantity" id="quantity2" value="1" min="1">
+            <button class="add-to-cart" onclick="addToCart('Organic Apples', 'AED 12 / kg', 'quantity2')">Add to Cart</button>
+        </div>
+        <div class="product" data-name="Fresh Spinach">
+            <img src="images/spinach.jpg.jpg" alt="Fresh Spinach">
+            <h2 onclick="showProductDetails('Fresh Spinach')">Fresh Spinach</h2>
+            <p>Organic spinach leaves, rich in nutrients.</p>
+            <p class="price">AED 8 / bunch</p>
+            <input type="number" class="quantity" id="quantity3" value="1" min="1">
+            <button class="add-to-cart" onclick="addToCart('Fresh Spinach', 'AED 8 / bunch', 'quantity3')">Add to Cart</button>
+        </div>
+    </div>
+
+    <!-- Modal for Product Details -->
+    <div id="productModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeModal()">&times;</span>
+            <h2 id="modalTitle"></h2>
+            <p id="modalDescription"></p>
+            <p><strong>Price:</strong> <span id="modalPrice"></span></p>
+            <p><strong>Nutritional Info:</strong></p>
+            <ul id="modalNutrition"></ul>
+        </div>
+    </div>
+
+    <!-- Notification -->
+    <div id="notification" class="notification"></div>
+
+    <script>
+        const productDetails = {
+            "Almond Milk": {
+                description: "Dairy-free almond milk, 1-liter pack.",
+                price: "AED 15 / pack",
+                nutrition: ["Calories: 60", "Fat: 2.5g", "Carbohydrates: 8g", "Protein: 1g"]
+            },
+            "Organic Apples": {
+                description: "Fresh organic apples from local farms.",
+                price: "AED 12 / kg",
+                nutrition: ["Calories: 52", "Carbohydrates: 14g", "Fiber: 2.4g", "Vitamin C: 14% DV"]
+            },
+            "Fresh Spinach": {
+                description: "Organic spinach leaves, rich in nutrients.",
+                price: "AED 8 / bunch",
+                nutrition: ["Calories: 23", "Protein: 2.9g", "Iron: 15% DV", "Vitamin A: 187% DV"]
+            }
+        };
+
+        function searchProduct() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const products = document.querySelectorAll('.product');
+            
+            products.forEach(product => {
+                const productName = product.getAttribute('data-name').toLowerCase();
+                if (productName.includes(searchTerm)) {
+                    product.style.display = 'block';
+                } else {
+                    product.style.display = 'none';
+                }
+            });
+        }
+
+        function showProductDetails(productName) {
+            const product = productDetails[productName];
+            document.getElementById("modalTitle").textContent = productName;
+            document.getElementById("modalDescription").textContent = product.description;
+            document.getElementById("modalPrice").textContent = product.price;
+
+            const nutritionList = document.getElementById("modalNutrition");
+            nutritionList.innerHTML = "";
+            product.nutrition.forEach(info => {
+                const li = document.createElement("li");
+                li.textContent = info;
+                nutritionList.appendChild(li);
+            });
+
+            document.getElementById("productModal").style.display = "flex";
+        }
+
+        function closeModal() {
+            document.getElementById("productModal").style.display = "none";
+        }
+
+        function addToCart(productName, price, quantityId) {
+            const quantity = document.getElementById(quantityId).value;
+            const product = { name: productName, price, quantity };
+
+            let cart = JSON.parse(localStorage.getItem('cart')) || [];
+            const existingProduct = cart.find(item => item.name === productName);
+
+            if (existingProduct) {
+                existingProduct.quantity = parseInt(existingProduct.quantity) + parseInt(quantity);
+            } else {
+                cart.push(product);
+            }
+
+            localStorage.setItem('cart', JSON.stringify(cart));
+            updateCartCount();
+            showNotification(productName, quantity);
+        }
+
+        function viewCart() {
+            window.location.href = "cart.html";
+        }
+
+        function updateCartCount() {
+            const cart = JSON.parse(localStorage.getItem('cart')) || [];
+            const uniqueCategories = new Set(cart.map(item => item.name));
+            document.getElementById('cart-count').textContent = uniqueCategories.size;
+        }
+
+        function showNotification(productName, quantity) {
+            const notification = document.getElementById('notification');
+            notification.textContent = `${productName} (${quantity}) added to your cart!`;
+            notification.style.display = 'block';
+
+            // Hide after 2 seconds
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 2000);
+        }
+
+        window.onload = updateCartCount;
+    </script>
+</body>
+</html>
