@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Cart - My Grocery Website</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 50px;
+        }
+        h1 {
+            font-size: 2em;
+        }
+        .back-button {
+            position: fixed; /* Keeps button fixed in the top-left corner */
+            top: 15px;
+            left: 15px;
+            padding: 10px 15px;
+            background-color: #4e44a7;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 1em;
+            transition: background-color 0.3s ease;
+            z-index: 1000;
+        }
+        .back-button:hover {
+            background-color: #3d3581;
+        }
+        .cart-items {
+            margin-top: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .cart-item {
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            padding: 10px;
+            margin: 10px;
+            width: 300px;
+            text-align: left;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        .cart-item p {
+            margin: 5px 0;
+        }
+        .price {
+            color: #4e44a7;
+            font-weight: bold;
+        }
+        .checkout-button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #4e44a7;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .checkout-button:hover {
+            background-color: #3d3581;
+        }
+        .remove-button {
+            margin-top: 10px;
+            padding: 5px 10px;
+            background-color: #ff4e4e;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .remove-button:hover {
+            background-color: #e04040;
+        }
+        .quantity-buttons {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100px;
+        }
+        .quantity-input {
+            width: 40px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <!-- Back to Main Menu Button -->
+    <a href="index.html" class="back-button">Back to Main Menu</a>
+
+    <h1>Your Cart</h1>
+    <div class="cart-items" id="cartItems"></div>
+    <button class="checkout-button" onclick="checkout()">Checkout</button>
+
+    <script>
+        // Function to display items in the cart
+        function displayCart() {
+            let cart = JSON.parse(localStorage.getItem('cart')) || [];
+            let cartItemsDiv = document.getElementById('cartItems');
+
+            // Clear the cart items container
+            cartItemsDiv.innerHTML = '';
+
+            if (cart.length === 0) {
+                cartItemsDiv.innerHTML = '<p>Your cart is empty!</p>';
+            } else {
+                // Loop through each item in the cart and display it
+                cart.forEach((item, index) => {
+                    let cartItemDiv = document.createElement('div');
+                    cartItemDiv.classList.add('cart-item');
+                    
+                    // Parse the price to a number before multiplying by quantity
+                    let price = parseFloat(item.price.replace(/[^\d.-]/g, ''));
+                    let totalPrice = price * item.quantity;
+
+                    cartItemDiv.innerHTML = `
+                        <p><strong>${item.name}</strong></p>
+                        <p>Price: AED ${price.toFixed(2)}</p>
+                        <div class="quantity-buttons">
+                            <button onclick="changeQuantity(${index}, -1)">-</button>
+                            <input type="number" class="quantity-input" value="${item.quantity}" onchange="updateQuantity(${index}, this.value)">
+                            <button onclick="changeQuantity(${index}, 1)">+</button>
+                        </div>
+                        <p class="total-price">Total: AED ${totalPrice.toFixed(2)}</p>
+                        <button class="remove-button" onclick="removeFromCart(${index})">Remove</button>
+                    `;
+                    cartItemsDiv.appendChild(cartItemDiv);
+                });
+            }
+        }
+
+        // Function to change the quantity of an item (+/-)
+        function changeQuantity(index, change) {
+            let cart = JSON.parse(localStorage.getItem('cart')) || [];
+            let item = cart[index];
+
+            // Convert quantity to a number and ensure it does not go below 1
+            item.quantity = Number(item.quantity) + change;
+            if (item.quantity < 1) {
+                item.quantity = 1; // Set minimum quantity to 1
+            }
+
+            // Update the cart in localStorage
+            localStorage.setItem('cart', JSON.stringify(cart));
+
+            // Update the input field directly without re-rendering the entire cart
+            document.querySelectorAll('.quantity-input')[index].value = item.quantity;
+
+            // Recalculate and update the total price
+            let price = parseFloat(item.price.replace(/[^\d.-]/g, ''));
+            document.querySelectorAll('.total-price')[index].textContent = `Total: AED ${(price * item.quantity).toFixed(2)}`;
+        }
+
+        // Function to update the quantity from the input field
+        function updateQuantity(index, newQuantity) {
+            let cart = JSON.parse(localStorage.getItem('cart')) || [];
+            let item = cart[index];
+
+            // Ensure that the new quantity is a valid number and not less than 1
+            newQuantity = Math.max(1, parseInt(newQuantity) || 1); // If invalid, set to 1
+
+            item.quantity = newQuantity;
+
+            // Update the cart in localStorage
+            localStorage.setItem('cart', JSON.stringify(cart));
+            
+            // Recalculate and update the total price
+            let price = parseFloat(item.price.replace(/[^\d.-]/g, ''));
+            document.querySelectorAll('.total-price')[index].textContent = `Total: AED ${(price * item.quantity).toFixed(2)}`;
+        }
+
+        // Function to remove an item from the cart
+        function removeFromCart(index) {
+            let cart = JSON.parse(localStorage.getItem('cart')) || [];
+            cart.splice(index, 1); // Remove the item at the specified index
+            localStorage.setItem('cart', JSON.stringify(cart)); // Update the cart in localStorage
+            displayCart(); // Refresh the cart display
+        }
+
+        // Function to handle checkout (you can modify this to fit your checkout process)
+        function checkout() {
+            alert("Proceeding to checkout...");
+            // Add your checkout logic here
+        }
+
+        // Display cart items when the page loads
+        displayCart();
+    </script>
+</body>
+</html>

@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Cart - My Grocery Website</title>
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        h1 {
+            font-size: 2.5em;
+            margin-top: 30px;
+            margin-bottom: 20px;
+            color: #4a7c59;
+        }
+        .back-button {
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            padding: 10px 15px;
+            background-color: #4a7c59;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 1em;
+            transition: background-color 0.3s ease;
+        }
+        .back-button:hover {
+            background-color: #3d6a4a;
+        }
+        .cart-items {
+            margin-top: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            justify-items: center;
+            width: 90%;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .cart-item {
+            border: 1px solid #e0e0e0;
+            border-radius: 15px;
+            padding: 20px;
+            width: 100%;
+            max-width: 350px;
+            background-color: #ffffff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .cart-item img {
+            width: 100%;
+            height: auto;
+            max-width: 150px;
+            max-height: 150px;
+            object-fit: contain;
+            margin-bottom: 15px;
+        }
+        .cart-item p {
+            margin: 5px 0;
+        }
+        .price {
+            color: #4a7c59;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+        .checkout-button {
+            margin-top: 30px;
+            padding: 15px 25px;
+            background-color: #4a7c59;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+            font-size: 1.2em;
+        }
+        .checkout-button:hover {
+            background-color: #3d6a4a;
+            transform: scale(1.05);
+        }
+        .remove-button {
+            margin-top: 15px;
+            padding: 8px 15px;
+            background-color: #ff6b6b;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            font-size: 1em;
+        }
+        .remove-button:hover {
+            background-color: #e04040;
+        }
+        .quantity-buttons {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 150px;
+            margin-top: 10px;
+        }
+        .quantity-input {
+            width: 50px;
+            text-align: center;
+            font-size: 1.2em;
+            margin: 0 10px;
+        }
+        .total-price-container {
+            font-size: 2em;
+            font-weight: bold;
+            margin-top: 30px;
+            color: #333;
+        }
+        .payment-options {
+            margin-top: 30px;
+        }
+        .payment-options button {
+            padding: 10px 20px;
+            background-color: #4a7c59;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px;
+            transition: background-color 0.3s ease;
+        }
+        .payment-options button:hover {
+            background-color: #3d6a4a;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 450px;
+            text-align: left;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+        .close-button {
+            float: right;
+            font-size: 1.5em;
+            cursor: pointer;
+            color: #999;
+            transition: color 0.3s ease;
+        }
+        .close-button:hover {
+            color: #333;
+        }
+        .modal-content h2 {
+            margin-top: 0;
+            text-align: center;
+            color: #4a7c59;
+        }
+        .modal-content input {
+            display: block;
+            margin: 20px auto;
+            padding: 12px;
+            width: calc(100% - 40px);
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1em;
+        }
+        .submit-payment-button {
+            display: block;
+            margin: 25px auto;
+            padding: 12px 25px;
+            background-color: #4a7c59;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+            font-size: 1.2em;
+        }
+        .submit-payment-button:hover {
+            background-color: #3d6a4a;
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+    <!-- Back to Main Menu Button -->
+    <a href="index.html" class="back-button">Back to Main Menu</a>
+
+    <h1>Your Cart</h1>
+    <div class="cart-items" id="cartItems"></div>
+    <div class="total-price-container" id="totalPrice">Total: AED 0.00</div>
+    <button class="checkout-button" onclick="showPaymentOptions()">Checkout</button>
+
+    <!-- Payment Options -->
+    <div class="payment-options" id="paymentOptions" style="display: none;">
+        <h2>Select Payment Method</h2>
+        <button onclick="selectPaymentMethod('cash')">Cash</button>
+        <button onclick="selectPaymentMethod('card')">Card</button>
+    </div>
+
+    <!-- Card Details Modal -->
+    <div id="cardModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeModal()">&times;</span>
+            <h2>Enter Card Details</h2>
+            <input type="text" id="cardNumber" placeholder="Card Number">
+            <input type="text" id="cardName" placeholder="Name on Card">
+            <input type="text" id="expiryDate" placeholder="Expiry Date (MM/YY)">
+            <input type="text" id="cvv" placeholder="CVV">
+            <button class="submit-payment-button" onclick="submitPayment()">Submit Payment</button>
+        </div>
+    </div>
+
+    <script>
+        // Function to display items in the cart
+        function displayCart() {
+            let cart = JSON.parse(localStorage.getItem('cart')) || [];
+            let cartItemsDiv = document.getElementById('cartItems');
+
+            // Clear the cart items container
+            cartItemsDiv.innerHTML = '';
+
+            if (cart.length === 0) {
+                cartItemsDiv.innerHTML = '<p>Your cart is empty!</p>';
+                document.getElementById('totalPrice').textContent = "Total: AED 0.00";
+            } else {
+                // Loop through each item in the cart and display it
+                cart.forEach((item, index) => {
+                    let cartItemDiv = document.createElement('div');
+                    cartItemDiv.classList.add('cart-item');
+                    
+                    // Parse the price to a number before multiplying by quantity
+                    let price = parseFloat(item.price.replace(/[^\d.-]/g, ''));
+                    let totalPrice = price * item.quantity;
+
+                    // Ensure the image source is taken from the catalog
+                    let catalogImages = {
+                        'Almond Milk': 'images/almond_milk.png',
+                        'Cow Milk': 'images/cow_milk.jpg',
+                        'Greek Yogurt': 'images/greek_yougurt.png',
+                        'Organic Apples': 'images/apple.jfif',
+                        'Bananas': 'images/bananas.jpg',
+                        'Blueberries': 'images/blueberries.jpg',
+                        'Fresh Spinach': 'images/spinach.jpg.jpg',
+                        'Carrots': 'images/carrots.jpg',
+                        'Bell Peppers': 'images/bell peppers.jpg',
+                        'Mixed Nuts': 'images/mixed nuts.jpg',
+                        'Granola Bars': 'images/Granola Bars.jpg',
+                        'Dark Chocolate': 'images/Dark Chocolate.jpg'
+                    };
+                    let imageUrl = catalogImages[item.name] || item.image;
+
+                    cartItemDiv.innerHTML = `
+                        <img src="${imageUrl}" alt="${item.name}">
+                        <p><strong>${item.name}</strong></p>
+                        <p class="price">Price: AED ${price.toFixed(2)}</p>
+                        <div class="quantity-buttons">
+                            <button onclick="changeQuantity(${index}, -1)">-</button>
+                            <input type="number" class="quantity-input" value="${item.quantity}" onchange="updateQuantity(${index}, this.value)">
+                            <button onclick="changeQuantity(${index}, 1)">+</button>
+                        </div>
+                        <p class="total-price">Total: AED ${totalPrice.toFixed(2)}</p>
+                        <button class="remove-button" onclick="removeFromCart(${index})">Remove</button>
+                    `;
+                    cartItemsDiv.appendChild(cartItemDiv);
+                });
+
+                calculateTotalPrice();
+            }
+        }
+
+        // Function to calculate the total price of all items in the cart
+        function calculateTotalPrice() {
+            let cart = JSON.parse(localStorage.getItem('cart')) || [];
+            let totalCost = cart.reduce((acc, item) => {
+                let price = parseFloat(item.price.replace(/[^\d.-]/g, ''));
+                return acc + price * item.quantity;
+            }, 0);
+
+            document.getElementById('totalPrice').textContent = `Total: AED ${totalCost.toFixed(2)}`;
+        }
+
+        // Function to change the quantity of an item (+/-)
+        function changeQuantity(index, change) {
+            let cart = JSON.parse(localStorage.getItem('cart')) || [];
+            let item = cart[index];
+
+            item.quantity = Number(item.quantity) + change;
+            if (item.quantity < 1) {
+                item.quantity = 1;
+            }
+
+            localStorage.setItem('cart', JSON.stringify(cart));
+            document.querySelectorAll('.quantity-input')[index].value = item.quantity;
+
+            let price = parseFloat(item.price.replace(/[^\d.-]/g, ''));
+            document.querySelectorAll('.total-price')[index].textContent = `Total: AED ${(price * item.quantity).toFixed(2)}`;
+            
+            calculateTotalPrice();
+        }
+
+        // Function to update the quantity from the input field
+        function updateQuantity(index, newQuantity) {
+            let cart = JSON.parse(localStorage.getItem('cart')) || [];
+            let item = cart[index];
+
+            newQuantity = Math.max(1, parseInt(newQuantity) || 1);
+
+            item.quantity = newQuantity;
+
+            localStorage.setItem('cart', JSON.stringify(cart));
+            
+            let price = parseFloat(item.price.replace(/[^\d.-]/g, ''));
+            document.querySelectorAll('.total-price')[index].textContent = `Total: AED ${(price * item.quantity).toFixed(2)}`;
+            
+            calculateTotalPrice();
+        }
+
+        // Function to remove an item from the cart
+        function removeFromCart(index) {
+            let cart = JSON.parse(localStorage.getItem('cart')) || [];
+            cart.splice(index, 1);
+            localStorage.setItem('cart', JSON.stringify(cart));
+            displayCart();
+        }
+
+        // Function to show payment options
+        function showPaymentOptions() {
+            document.getElementById('paymentOptions').style.display = 'block';
+        }
+
+        // Function to select payment method
+        function selectPaymentMethod(method) {
+            if (method === 'cash') {
+                alert('You have selected cash payment. Please proceed.');
+            } else if (method === 'card') {
+                document.getElementById('cardModal').style.display = 'flex';
+            }
+        }
+
+        // Function to close the modal
+        function closeModal() {
+            document.getElementById('cardModal').style.display = 'none';
+        }
+
+        // Function to submit payment
+        function submitPayment() {
+            const cardNumber = document.getElementById('cardNumber').value;
+            const cardName = document.getElementById('cardName').value;
+            const expiryDate = document.getElementById('expiryDate').value;
+            const cvv = document.getElementById('cvv').value;
+
+            if (cardNumber && cardName && expiryDate && cvv) {
+                alert('Payment successful! Thank you for your purchase.');
+                closeModal();
+            } else {
+                alert('Please fill in all card details.');
+            }
+        }
+
+        // Display cart items when the page loads
+        displayCart();
+    </script>
+</body>
+</html>
